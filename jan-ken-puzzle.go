@@ -11,6 +11,7 @@ package main
 import (
 	"fmt"
 	"sort"
+	"strconv"
 )
 
 type coord struct {
@@ -35,6 +36,19 @@ func (a ByPos) Less(i, j int) bool {	// Função de comparar para ordenar.
 	}
 
 	return a[i].tipo < a[j].tipo
+}
+
+func tabToString(tab [][]int) string {
+	var key string;
+	key = ""
+
+	for i := 0; i < len(tab); i++ {
+		for j := 0; j < len(tab[i]); j++ {
+			key += strconv.Itoa(tab[i][j])	// Converte o inteiro para string diretamente
+		}
+	}
+
+	return key
 }
 
 func comida(eater int) int {	// Retorna qual peça pode ser comida pela que foi passada como parâmetro
@@ -63,7 +77,9 @@ func busca(tab [][]int, control []coord, R, C int, results *[]end) {
 		curX := control[i].x
 		curY := control[i].y
 		tipo := tab[curX][curY]
+		fmt.Printf("t: %d\n", tipo);
 		comida := comida(tipo)
+		fmt.Printf("c: %d\n", comida);
 
 		// Come pra baixo
 		if curX+1 < R && tab[curX+1][curY] != 0 && comida == tab[curX+1][curY] {
@@ -141,19 +157,14 @@ func comparaEnd(a, b end) bool {	// Verifica se duas variáveis do tipo 'end' s�
 // de saídas diferentes e estas ordenadas)
 func fomataSaida(raw []end) (total int, diferente int, final []end) {
 	total = len(raw)
-	var j int
 
 	for i := range raw {
-		for j = 0; j < len(final); j++ {
-			if comparaEnd(raw[i], final[j]) == true {
-				break
-			}
+		if i > 0 && comparaEnd(raw[i-1], final[len(final) - 1]) {
+			continue
 		}
 
-		if j == len(final) {
-			diferente++
-			final = append(final, raw[i])
-		}
+		diferente++
+		final = append(final, raw[i])
 	}
 
 	return
@@ -176,6 +187,15 @@ func main() {
 			}
 		}
 	}
+	/*for i := 0; i < len(tab); i++ {
+		for j := 0; j < len(tab[i]); j++ {
+			fmt.Printf("%d", tab[i][j])
+		}
+		fmt.Printf("\n")
+	}
+
+	fmt.Printf("%s\n", tabToString(tab))
+	*/
 
 	busca(tab, control, R, C, &results)	// Algorítmo backtracking
 
