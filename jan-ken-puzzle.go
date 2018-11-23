@@ -9,7 +9,7 @@ package main
 import (
 	"fmt"
 	"sort"
-	"strconv"
+//	"strconv"
 )
 
 type coord struct {
@@ -27,18 +27,18 @@ type solucao struct {
 
 type ByPos []end
 
-var mem map[string]int
+var mem map[uint64]int
 
 var dfsVet = [4]int{1, -1, 0, 0}
 
 func rdp(tab [][]int, results *solucao) bool {
-	a, b := mem[tabToString(tab)]
+	a, b := mem[createKey(tab)]
 	results.total += a
 	return b
 }
 
 func temIlhas(x, y, p int, tab [][]int) int {
-	
+
 	if tab[x][y] * p <= 0 {
 		return 0
 	}
@@ -65,13 +65,13 @@ func temIlhas(x, y, p int, tab [][]int) int {
 	return cont
 }
 
-func busca(tab [][]int, control []coord, R, C int, results *solucao) {
+func busca(tab [][]int, control []coord, R, C int, results *solucao, key uint64) {
 
 			//fmt.Printf("\tEntro\n")
 	tam := len(control)
 	aux := 0
 	if rdp(tab, results) {
-			//fmt.Printf("###DP = %d e vorto\n", mem[tabToString(tab)])
+			//fmt.Printf("###DP = %d e vorto\n", mem[createKey(tab)])
 		return
 	}
 
@@ -79,7 +79,7 @@ func busca(tab [][]int, control []coord, R, C int, results *solucao) {
 		results.resps = append(results.resps, end{control[0].x + 1, control[0].y + 1, tab[control[0].x][control[0].y]})
 		results.total++
 		results.difs++
-		mem[tabToString(tab)] = 1
+		mem[createKey(tab)] = 1
 			//fmt.Printf("***Conto e vorto\n")
 		return
 	}
@@ -87,7 +87,7 @@ func busca(tab [][]int, control []coord, R, C int, results *solucao) {
 	if tam != temIlhas(control[0].x, control[0].y, 1, tab) {
 		//fmt.Printf("Ilha e vorto\n")
 		temIlhas(control[0].x, control[0].y, -1, tab)
-		mem[tabToString(tab)] = 0
+		mem[createKey(tab)] = 0
 		return
 	}
 	temIlhas(control[0].x, control[0].y, -1, tab)
@@ -107,8 +107,11 @@ func busca(tab [][]int, control []coord, R, C int, results *solucao) {
 
 			control, control[i], control[tam - 1], tab[curX][curY], tab[curX + 1][curY] = control[:tam - 1], control[tam - 1], control[i], 0, tab[curX][curY]
 
-			busca(tab, control, R, C, results)
-			aux += mem[tabToString(tab)]
+			//key[
+
+			busca(tab, control, R, C, results, key)
+			//fmt.Println(createKey(tab))
+			aux += mem[createKey(tab)]
 
 			control = control[:tam]
 			control[i], control[tam - 1], tab[curX][curY], tab[curX + 1][curY] = control[tam - 1], control[i], tab[curX + 1][curY], comida
@@ -120,8 +123,8 @@ func busca(tab [][]int, control []coord, R, C int, results *solucao) {
 
 			control, control[i], control[tam - 1], tab[curX][curY], tab[curX - 1][curY] = control[:tam - 1], control[tam - 1], control[i], 0, tab[curX][curY]
 
-			busca(tab, control, R, C, results)
-			aux += mem[tabToString(tab)]
+			busca(tab, control, R, C, results, key)
+			aux += mem[createKey(tab)]
 
 			control = control[:tam]
 			control[i], control[tam - 1], tab[curX][curY], tab[curX - 1][curY] = control[tam - 1], control[i], tab[curX - 1][curY], comida
@@ -132,8 +135,8 @@ func busca(tab [][]int, control []coord, R, C int, results *solucao) {
 			//fmt.Printf("Dir\n")
 
 			control, control[i], control[tam - 1], tab[curX][curY], tab[curX][curY + 1] = control[:tam - 1], control[tam - 1], control[i], 0, tab[curX][curY]
-			busca(tab, control, R, C, results)
-			aux += mem[tabToString(tab)]
+			busca(tab, control, R, C, results, key)
+			aux += mem[createKey(tab)]
 
 			control = control[:tam]
 			control[i], control[tam - 1], tab[curX][curY], tab[curX][curY + 1] = control[tam - 1], control[i], tab[curX][curY + 1], comida
@@ -145,16 +148,16 @@ func busca(tab [][]int, control []coord, R, C int, results *solucao) {
 
 			control, control[i], control[tam - 1], tab[curX][curY], tab[curX][curY - 1] = control[:tam - 1], control[tam - 1], control[i], 0, tab[curX][curY]
 
-			busca(tab, control, R, C, results)
-			aux += mem[tabToString(tab)]
+			busca(tab, control, R, C, results, key)
+			aux += mem[createKey(tab)]
 
 			control = control[:tam]
 			control[i], control[tam - 1], tab[curX][curY], tab[curX][curY - 1] = control[tam - 1], control[i], tab[curX][curY - 1], comida
 		}
 
 	}
-		mem[tabToString(tab)] = aux
-			
+		mem[createKey(tab)] = aux
+
 		//fmt.Printf("Cabo e vorto\n")
 
 	return
@@ -198,9 +201,10 @@ func main() {
 		}
 	}
 
-	mem = make(map[string]int)
+	mem = make(map[uint64]int)
+	key := createKey(tab)
 
-	busca(tab, control, R, C, &results)	// Algorítmo backtracking
+	busca(tab, control, R, C, &results, key)	// Algorítmo backtracking
 	//fmt.Printf("Fimm %d %d\n\n", results.total, len(results.resps))
 
 	sort.Sort(ByPos(results.resps))	// Ordena o vetor de saídas
@@ -211,56 +215,15 @@ func main() {
 	}
 }
 
-/*
-func comida(eater int) int {	// Retorna qual peça pode ser comida pela que foi passada como parâmetro
-	switch eater {
-	case 1:
-		return 2
-	case 2:
-		return 3
-	case 3:
-		return 1
-	default:
-		return -1
-	}
-} */
+func createKey(tab [][]int) uint64 {
+	var key uint64
+	key = 0
 
-/*
-// Formata o vetor de saída para ficar conforme o esperado (mostrando o total de saídas, a quantidade
-// de saídas diferentes e estas ordenadas)
-func fomataSaida(raw []end) (total int, diferente int, final []end) {
-	total = len(raw)
-	var j int
-
-	for i := range raw {
-		for j = 0; j < len(final); j++ {
-			if comparaEnd(raw[i], final[j]) == true {
-				break
-			}
-		}
-
-		if j == len(final) {
-			diferente++
-			final = append(final, raw[i])
+	for i := 0; i < len(tab); i++ {
+		for j := 0; j < len(tab[i]); j++ {
+			key += uint64(tab[i][j]) << uint64(2 * (i * len(tab[i]) + j))
 		}
 	}
 
-func comparaEnd(a, b end) bool {	// Verifica se duas variáveis do tipo 'end' são iguais
-	return a.x == b.x && a.y == b.y && a.tipo == b.tipo
+	return key
 }
-
-	return
-} */
-
- func tabToString(tab [][]int) string {                                                              
-         var key string;                                                                             
-         key = ""                                                                                    
-                                                                                                     
-         for i := 0; i < len(tab); i++ {                                                                                                                                                       
-                 for j := 0; j < len(tab[i]); j++ {                                                  
-                         key += strconv.Itoa(tab[i][j])  // Converte o inteiro para string diretamente
-                 }                                                                                   
-         }                                                                                           
-                                                                                                     
-         return key                                                                                  
-} 
